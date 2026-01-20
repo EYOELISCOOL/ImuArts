@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IMU ARTS — Under Development</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background: radial-gradient(circle at top, #1a1a2e, #0f0f1a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    overflow: hidden;
+}
+
+/* Animated background glow */
+body::before {
+    content: "";
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: linear-gradient(45deg, #7f5cff, #00e0ff);
+    filter: blur(120px);
+    opacity: 0.4;
+    animation: float 8s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-40px); }
+}
+
+.container {
+    position: relative;
+    max-width: 900px;
+    padding: 60px;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+    text-align: center;
+    animation: fadeIn 1.5s ease forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+h1 {
+    font-size: clamp(3rem, 6vw, 5rem);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    margin-bottom: 25px;
+    background: linear-gradient(90deg, #ffffff, #b9c6ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #cfd4ff;
+    margin-bottom: 35px;
+}
+
+.notice {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: #e6e6f0;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.notice strong {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.footer {
+    margin-top: 40px;
+    font-size: 0.9rem;
+    opacity: 0.7;
+    letter-spacing: 0.05em;
+}
+</style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>IMU ARTS</h1>
+        <div class="subtitle">Currently Under Development</div>
+
+        <div class="notice">
+            IMU ARTS is still in development and <strong>is not officially live yet</strong>.
+            We do <strong>not</strong> take any responsibility for purchases, transactions,
+            or interactions made on any other websites that may appear similar or claim
+            to represent us.
+            <br><br>
+            Please be aware that any site, service, or offer outside of our official launch
+            is <strong>not affiliated</strong> with IMU ARTS in any way.
+        </div>
+
+        <div class="footer">
+            Official launch coming soon.
+            Sincerely The development team.
+        </div>
+    </div>
+</body>
+</html>
