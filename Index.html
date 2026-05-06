@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>IMU Arts</title>
+  <style>
+    /* ---------- RESET & FOUNDATION ---------- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: #F5F1EB;
+    }
+
+    body {
+      font-family: 'Inter', 'Helvetica Neue', system-ui, -apple-system, sans-serif;
+      background-color: #F5F1EB;
+      color: #111111;
+      line-height: 1.2;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      cursor: default;
+    }
+
+    /* ---------- LOADING SCREEN ---------- */
+    .loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: #F5F1EB;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1) 1.2s,
+                  visibility 0.6s cubic-bezier(0.4, 0, 0.2, 1) 1.2s;
+    }
+
+    .loader.fade-out {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    /* The logo that will animate */
+    .loader-logo {
+      position: fixed;
+      z-index: 10001;
+      /* Start centered on screen */
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px;
+      height: 350px;
+      transition: all 1.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+      /* This transition handles the movement to nav */
+    }
+
+    .loader-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* When animation completes, logo moves to nav position */
+    .loader-logo.in-nav {
+      top: 0.2rem;
+      left: 4vw;
+      transform: translate(0, 0);
+      width: 100px;
+      height: 100px;
+      transition: all 1.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+
+    /* When nav is scrolled, logo adjusts with it */
+    .loader-logo.in-nav.scrolled-logo {
+      top: 1.1rem;
+    }
+
+    /* Subtle pulse ring around logo during loading */
+    .loader-ring {
+      position: fixed;
+      z-index: 10000;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 120px;
+      height: 120px;
+      border: 1px solid rgba(17, 17, 17, 0.06);
+      border-radius: 50%;
+      animation: ringPulse 2s infinite ease-in-out;
+      transition: opacity 0.5s ease 0.8s;
+      pointer-events: none;
+    }
+
+    .loader-ring.fade-out {
+      opacity: 0;
+    }
+
+    @keyframes ringPulse {
+      0%, 100% {
+        opacity: 0.2;
+        transform: translate(-50%, -50%) scale(1);
+      }
+      50% {
+        opacity: 0.5;
+        transform: translate(-50%, -50%) scale(1.1);
+      }
+    }
+
+    /* Loading text */
+    .loader-text {
+      position: fixed;
+      z-index: 10000;
+      top: calc(50% + 70px);
+      left: 50%;
+      transform: translate(-50%, 0);
+      font-family: 'Playfair Display', serif;
+      font-size: 0.9rem;
+      letter-spacing: 0.35em;
+      color: #111111;
+      opacity: 0;
+      animation: fadeTextIn 0.8s ease forwards 0.5s;
+      transition: opacity 0.5s ease 0.8s;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    .loader-text.fade-out {
+      opacity: 0;
+    }
+
+    @keyframes fadeTextIn {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, 10px);
+      }
+      100% {
+        opacity: 0.6;
+        transform: translate(-50%, 0);
+      }
+    }
+
+    /* ---------- CUSTOM CURSOR ---------- */
+    .custom-cursor {
+      width: 24px;
+      height: 24px;
+      border: 1.5px solid rgba(166, 90, 58, 0.5);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transition: transform 0.25s ease, width 0.25s ease, height 0.25s ease, border-color 0.25s ease;
+      transform: translate(-50%, -50%);
+      mix-blend-mode: difference;
+      opacity: 0;
+    }
+
+    .custom-cursor.visible {
+      opacity: 1;
+    }
+
+    .custom-cursor.hover-art {
+      width: 48px;
+      height: 48px;
+      border-color: rgba(166, 90, 58, 0.8);
+      background: rgba(166, 90, 58, 0.05);
+    }
+
+    /* ---------- TYPOGRAPHY ---------- */
+    .serif-display {
+      font-family: 'Playfair Display', 'Didot', 'Times New Roman', serif;
+      font-weight: 400;
+      letter-spacing: -0.02em;
+    }
+
+    .sans-caption {
+      font-family: 'Inter', 'Helvetica Neue', sans-serif;
+      font-weight: 300;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    /* ---------- NAVIGATION ---------- */
+    .nav-luxury {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 100;
+      padding: 2rem 4vw;
+      padding-left: calc(4vw + 56px);
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      transition: all 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
+      background: transparent;
+      backdrop-filter: blur(0px);
+    }
+
+    .nav-luxury.scrolled {
+      background: rgba(245, 241, 235, 0.88);
+      backdrop-filter: blur(14px);
+      padding: 1.1rem 4vw;
+      padding-left: calc(4vw + 56px);
+      border-bottom: 1px solid rgba(166, 90, 58, 0.07);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.8rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      font-family: 'Inter', sans-serif;
+      font-weight: 300;
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #111111;
+      text-decoration: none;
+      transition: opacity 0.5s ease, color 0.4s ease;
+      opacity: 0.7;
+      position: relative;
+      padding: 0.3rem 0;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 1px;
+      background: #A65A3A;
+      transition: width 0.55s cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+
+    .nav-links a:hover {
+      opacity: 1;
+      color: #A65A3A;
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .nav-menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.5rem;
+      opacity: 0.7;
+      transition: opacity 0.4s;
+    }
+
+    .nav-menu-toggle:hover {
+      opacity: 1;
+    }
+
+    .nav-menu-toggle span {
+      display: block;
+      width: 22px;
+      height: 1.5px;
+      background: #111111;
+      margin: 5px 0;
+      transition: transform 0.4s ease, opacity 0.3s;
+    }
+
+    /* ---------- CONTAINER ---------- */
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0 4vw;
+    }
+
+    .section-spacing {
+      margin: 14vh 0;
+    }
+
+    /* ---------- HERO SECTION ---------- */
+    .hero {
+      height: 100vh;
+      min-height: 700px;
+      display: flex;
+      align-items: center;
+      position: relative;
+      background: #F5F1EB;
+      overflow: hidden;
+    }
+
+    .hero-line-art {
+      position: absolute;
+      top: 15%;
+      right: 5%;
+      width: 40%;
+      height: 60%;
+      opacity: 0.06;
+      background: radial-gradient(circle at 30% 40%, #A65A3A 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: linear-gradient(225deg, black 20%, transparent 85%);
+      animation: slowDrift 20s infinite alternate ease-in-out;
+      pointer-events: none;
+    }
+
+    .hero-line-art-2 {
+      position: absolute;
+      bottom: 10%;
+      left: 3%;
+      width: 25%;
+      height: 35%;
+      opacity: 0.05;
+      background: repeating-linear-gradient(45deg, #A65A3A 0px, #A65A3A 1px, transparent 1px, transparent 30px);
+      animation: slowDriftReverse 22s infinite alternate ease-in-out;
+      pointer-events: none;
+    }
+
+    @keyframes slowDrift {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(3%, 2%) scale(1.04); }
+    }
+
+    @keyframes slowDriftReverse {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(-2%, -1.5%) scale(1.03); }
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 5;
+      max-width: 900px;
+      padding-top: 2rem;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 1.2s cubic-bezier(0.25, 0.1, 0.25, 1) 0.3s,
+                  transform 1.2s cubic-bezier(0.25, 0.1, 0.25, 1) 0.3s;
+    }
+
+    .hero-content.revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .hero-logo-static {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.1rem, 2.3vw, 1.6rem);
+      font-weight: 450;
+      letter-spacing: 0.2em;
+      color: #111111;
+      margin-bottom: 2.5rem;
+      display: inline-block;
+      border-bottom: 1px solid rgba(166, 90, 58, 0.22);
+      padding-bottom: 0.5rem;
+      text-transform: uppercase;
+    }
+
+    .hero-headline {
+      font-size: clamp(3.8rem, 10vw, 7.5rem);
+      line-height: 0.94;
+      margin-bottom: 1.4rem;
+      color: #111111;
+      font-weight: 400;
+    }
+
+    .hero-subtitle {
+      font-family: 'Inter', sans-serif;
+      font-weight: 280;
+      font-size: 1.1rem;
+      letter-spacing: 0.3em;
+      color: #2b2b2b;
+      max-width: 480px;
+      margin-top: 0.8rem;
+      text-transform: uppercase;
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 3rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      opacity: 0;
+      transition: opacity 1s ease 1.8s;
+    }
+
+    .scroll-hint.visible {
+      opacity: 1;
+      animation: fadeHint 3s infinite;
+    }
+
+    .scroll-line {
+      width: 1px;
+      height: 40px;
+      background: rgba(17, 17, 17, 0.25);
+    }
+
+    .scroll-text {
+      font-size: 0.6rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(17, 17, 17, 0.4);
+    }
+
+    @keyframes fadeHint {
+      0%, 100% { opacity: 0.35; }
+      50% { opacity: 0.75; }
+    }
+
+    /* ---------- FEATURED ARTWORK ---------- */
+    .featured-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1px;
+    }
+
+    .artwork-item {
+      flex: 1 1 340px;
+      min-width: 280px;
+      position: relative;
+      overflow: hidden;
+      background: #F5F1EB;
+      cursor: crosshair;
+    }
+
+    .artwork-image {
+      width: 100%;
+      height: 80vh;
+      max-height: 650px;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.75s cubic-bezier(0.22, 0.1, 0.1, 1), filter 0.6s ease;
+      filter: brightness(0.94);
+    }
+
+    .artwork-item:hover .artwork-image {
+      transform: scale(1.05);
+      filter: brightness(1.03);
+    }
+
+    .artwork-caption {
+      position: absolute;
+      bottom: 2.5rem;
+      left: 2.5rem;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.65s ease, transform 0.65s cubic-bezier(0.2, 0.9, 0.3, 1);
+      pointer-events: none;
+      color: #111111;
+      background: rgba(245, 241, 235, 0.84);
+      padding: 0.7rem 1.6rem;
+      backdrop-filter: blur(5px);
+    }
+
+    .artwork-item:hover .artwork-caption {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .artwork-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.7rem;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+    }
+
+    .artwork-artist {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      font-weight: 300;
+      margin-top: 0.2rem;
+    }
+
+    /* ---------- ARTIST SPOTLIGHT ---------- */
+    .artist-spotlight {
+      display: flex;
+      gap: 4rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .artist-portrait {
+      flex: 0 0 300px;
+      height: 380px;
+      object-fit: cover;
+      filter: brightness(0.92);
+      transition: filter 0.6s ease;
+    }
+
+    .artist-portrait:hover {
+      filter: brightness(0.98);
+    }
+
+    .artist-bio {
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .artist-name {
+      font-size: 2.8rem;
+      margin-bottom: 1rem;
+    }
+
+    .artist-role {
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      color: #A65A3A;
+      margin-bottom: 1.5rem;
+    }
+
+    .artist-quote {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      line-height: 1.3;
+      font-style: italic;
+      opacity: 0.8;
+      margin-bottom: 2rem;
+    }
+
+    /* ---------- JOURNAL ---------- */
+    .journal-grid {
+      display: flex;
+      gap: 3rem;
+      flex-wrap: wrap;
+    }
+
+    .journal-item {
+      flex: 1 1 280px;
+      border-bottom: 1px solid rgba(17, 17, 17, 0.08);
+      padding-bottom: 2rem;
+      transition: transform 0.5s ease;
+      cursor: pointer;
+    }
+
+    .journal-item:hover {
+      transform: translateY(-4px);
+    }
+
+    .journal-date {
+      font-size: 0.65rem;
+      letter-spacing: 0.25em;
+      color: #A65A3A;
+      margin-bottom: 1rem;
+    }
+
+    .journal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      margin-bottom: 0.8rem;
+      line-height: 1.2;
+    }
+
+    .journal-excerpt {
+      font-weight: 300;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      opacity: 0.7;
+    }
+
+    /* ---------- EXHIBITIONS ---------- */
+    .exhibition-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+    }
+
+    .exhibition-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid rgba(17, 17, 17, 0.06);
+      transition: opacity 0.4s;
+    }
+
+    .exhibition-item:hover {
+      opacity: 0.6;
+    }
+
+    .exhibition-city {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      letter-spacing: -0.01em;
+    }
+
+    .exhibition-date {
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      opacity: 0.6;
+    }
+
+    .exhibition-venue {
+      font-weight: 300;
+      font-size: 0.9rem;
+      font-style: italic;
+    }
+
+    /* ---------- ABOUT ---------- */
+    .about-layout {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 3.5rem;
+    }
+
+    .about-text {
+      flex: 1.2;
+      min-width: 300px;
+    }
+
+    .about-text h2 {
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      line-height: 1.1;
+      margin-bottom: 2rem;
+      font-weight: 400;
+    }
+
+    .about-paragraph {
+      font-family: 'Inter', sans-serif;
+      font-weight: 300;
+      font-size: 1.15rem;
+      line-height: 1.75;
+      color: #1f1f1f;
+      max-width: 520px;
+      margin-bottom: 2rem;
+    }
+
+    .accent-shape {
+      width: 50px;
+      height: 2px;
+      background: #A65A3A;
+      margin: 2.2rem 0;
+      opacity: 0.7;
+    }
+
+    .about-visual {
+      flex: 0.9;
+      min-width: 260px;
+      height: 420px;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" opacity="0.09"><path d="M45 145 Q 70 30 140 70" stroke="%23A65A3A" fill="none" stroke-width="0.8"/><circle cx="135" cy="68" r="3.5" fill="%23A65A3A"/><path d="M30 120 Q 90 170 160 100" stroke="%23A65A3A" fill="none" stroke-width="0.5" opacity="0.6"/></svg>');
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain;
+    }
+
+    /* ---------- COLLECTION ---------- */
+    .collection-label {
+      font-size: 0.8rem;
+      letter-spacing: 0.28em;
+      margin-bottom: 2.5rem;
+      color: #4e3b32;
+    }
+
+    .collection-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2.5rem;
+      justify-content: flex-start;
+    }
+
+    .art-piece {
+      flex: 1 1 200px;
+      max-width: 280px;
+      transition: transform 0.55s cubic-bezier(0.25, 0.1, 0.25, 1);
+      cursor: pointer;
+    }
+
+    .art-piece:hover {
+      transform: translateY(-10px);
+    }
+
+    .piece-image {
+      width: 100%;
+      aspect-ratio: 3/4;
+      object-fit: cover;
+      background: #e8e2d9;
+      display: block;
+      transition: filter 0.5s ease;
+      filter: brightness(0.95);
+    }
+
+    .art-piece:hover .piece-image {
+      filter: brightness(1.02);
+    }
+
+    .piece-details {
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .piece-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.35rem;
+      font-weight: 400;
+    }
+
+    .piece-medium {
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      opacity: 0.5;
+      margin-top: 0.2rem;
+    }
+
+    .piece-price {
+      font-weight: 280;
+      font-size: 0.95rem;
+      letter-spacing: 0.06em;
+      color: #3a2c24;
+    }
+
+    /* ---------- TESTIMONIAL ---------- */
+    .testimonial-block {
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .testimonial-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      line-height: 1.5;
+      font-style: italic;
+      opacity: 0.8;
+      margin-bottom: 2rem;
+    }
+
+    .testimonial-author {
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+    }
+
+    /* ---------- FOOTER ---------- */
+    .footer {
+      padding: 4rem 0 2.5rem;
+      border-top: 1px solid rgba(17, 17, 17, 0.07);
+    }
+
+    .footer-grid {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 3rem;
+      margin-bottom: 3rem;
+    }
+
+    .footer-col {
+      flex: 1;
+      min-width: 160px;
+    }
+
+    .footer-heading {
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      margin-bottom: 1.5rem;
+      opacity: 0.5;
+    }
+
+    .footer-link {
+      display: block;
+      color: #111111;
+      text-decoration: none;
+      font-weight: 300;
+      font-size: 0.9rem;
+      margin-bottom: 0.8rem;
+      opacity: 0.7;
+      transition: opacity 0.4s;
+      letter-spacing: 0.03em;
+    }
+
+    .footer-link:hover {
+      opacity: 1;
+      color: #A65A3A;
+    }
+
+    .footer-bottom {
+      text-align: center;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(17, 17, 17, 0.05);
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      opacity: 0.5;
+    }
+
+    .newsletter-input {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(17, 17, 17, 0.2);
+      padding: 0.6rem 0;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      width: 100%;
+      outline: none;
+      color: #111111;
+      letter-spacing: 0.05em;
+      transition: border-color 0.4s;
+    }
+
+    .newsletter-input:focus {
+      border-bottom-color: #A65A3A;
+    }
+
+    .newsletter-btn {
+      background: none;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #A65A3A;
+      cursor: pointer;
+      padding: 0.5rem 0;
+      margin-top: 0.8rem;
+      transition: opacity 0.4s;
+    }
+
+    .newsletter-btn:hover {
+      opacity: 0.6;
+    }
+
+    /* ---------- SCROLL ANIMATIONS ---------- */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(36px);
+      transition: opacity 1s cubic-bezier(0.15, 0.85, 0.3, 1), 
+                  transform 1s cubic-bezier(0.15, 0.85, 0.3, 1);
+    }
+
+    .fade-up.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ---------- RESPONSIVE ---------- */
+    @media (max-width: 768px) {
+      .nav-luxury {
+        padding: 1.5rem 5vw;
+        padding-left: calc(5vw + 48px);
+      }
+      .nav-luxury.scrolled {
+        padding: 1rem 5vw;
+        padding-left: calc(5vw + 48px);
+      }
+      .loader-logo.in-nav {
+        top: 1.5rem;
+        left: 5vw;
+        width: 32px;
+        height: 32px;
+      }
+      .loader-logo.in-nav.scrolled-logo {
+        top: 1rem;
+      }
+      .nav-links { gap: 1.5rem; }
+      .nav-links a { font-size: 0.7rem; letter-spacing: 0.1em; }
+      .nav-menu-toggle { display: block; }
+      .nav-links.mobile-hidden { display: none; }
+      .hero-headline { font-size: 3rem; }
+      .artwork-image { height: 60vh; }
+      .artist-spotlight { gap: 2rem; }
+      .artist-portrait { flex: 0 0 240px; height: 300px; }
+      .testimonial-text { font-size: 1.4rem; }
+    }
+
+    @media (max-width: 480px) {
+      .hero-headline { font-size: 2.4rem; }
+      .journal-grid { gap: 2rem; }
+      .exhibition-city { font-size: 1.4rem; }
+      .loader-logo.in-nav {
+        width: 28px;
+        height: 28px;
+      }
+    }
+
+    ::selection {
+      background: #dbcdbc;
+      color: #111111;
+    }
+
+    @media (hover: none) {
+      .custom-cursor { display: none; }
+    }
+  </style>
+  <link rel="icon" href="Imuarts.ico">
+</head>
+<body>
+  <!-- LOADING RING -->
+  <div class="loader-ring" id="loaderRing"></div>
+
+  <!-- LOADING TEXT -->
+  <div class="loader-text" id="loaderText"></div>
+
+  <!-- THE LOGO - starts centered, animates to nav -->
+  <!-- REPLACE THE src BELOW WITH YOUR EXTERNAL LOGO URL -->
+  <div class="loader-logo" id="animatedLogo">
+    <img 
+      src="./FINAL.PNG"
+      alt="IMU Arts Logo"
+    >
+  </div>
+
+  <!-- LOADING BACKGROUND -->
+  <div class="loader" id="loader"></div>
+
+  <!-- CUSTOM CURSOR -->
+  <div class="custom-cursor" id="customCursor"></div>
+
+  <!-- NAVIGATION -->
+  <nav class="nav-luxury" id="mainNav">
+    <div class="nav-links" id="navLinks">
+      <a href="#featured">Works</a>
+      <a href="#artist">Artists</a>
+      <a href="#journal">Journal</a>
+      <a href="#exhibitions">Exhibitions</a>
+      <a href="#collection">Shop</a>
+      <a href="#about">About</a>
+    </div>
+    <button class="nav-menu-toggle" id="menuToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <section class="hero" id="home">
+    <div class="hero-line-art" aria-hidden="true"></div>
+    <div class="hero-line-art-2" aria-hidden="true"></div>
+    <div class="container hero-content" id="heroContent">
+      <div class="hero-logo-static">IMU ARTS</div>
+      <h1 class="hero-headline serif-display">
+        Where Art<br>Becomes Identity
+      </h1>
+      <p class="hero-subtitle">
+        Under Development.Check our social media for updates until further notice.
+      </p>
+    </div>
+    <div class="scroll-hint" id="scrollHint" aria-hidden="true">
+      <div class="scroll-line"></div>
+      <span class="scroll-text">Discover</span>
+    </div>
+  </section>
+<section id="paintings" class="paintings-section">
+  <div class="container paintings-container">
+    <!-- refined header: quieter, more poetic -->
+    <div class="paintings-header">
+      <div class="header-accent-line"></div>
+      <div class="header-text-group">
+        <span class="paintings-label">Kalkidan's Archive</span>
+        <h2 class="paintings-title">
+          <span class="title-main">Paintings</span>
+          <span class="title-subtle">· Kalkidan's Originals</span>
+        </h2>
+      </div>
+      <div class="paintings-intro">
+        <p>Each canvas holds a rhythm — oil, pigment, and breath. A quiet collection of works available for acquisition.</p>
+        <a href="#collection" class="intro-link">full collection →</a>
+      </div>
+    </div>
+
+    <!-- refined grid: asymmetrical, gallery-grade -->
+    <div class="paintings-grid" id="paintingsGrid">
+      <!-- painting 1 — replace with your actual image URL and details -->
+      <div class="painting-card" data-artist="Kalkidan Mulugeta">
+        <div class="painting-image-wrapper">
+          <img src="./Resources IMU/1.jpg" alt="Abstract oil painting in earth tones" class="painting-image" loading="lazy">
+          <div class="painting-overlay">
+            <div class="overlay-content">
+              <button class="view-detail-btn">Inquire →</button>
+            </div>
+          </div>
+        </div>
+        <div class="painting-info">
+          <h3 class="painting-title">After Flames</h3>
+          <div class="painting-details-row">
+            <span class="painting-medium"></span>
+            <span class="painting-dimensions">120 × 150 cm</span>
+          </div>
+          <div class="painting-meta-footer">
+            <span class="painting-year">2025</span>
+            <span class="painting-status available">available</span>
+            <span class="piece-price"> Price 25,000€/29,344.15 USD</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- painting 2 -->
+      <div class="painting-card" data-artist="Kalkidan Mulugeta">
+        <div class="painting-image-wrapper">
+          <img src="./Resources IMU/3.jpg" alt="Minimalist abstract painting" class="painting-image" loading="lazy">
+          <div class="painting-overlay">
+            <div class="overlay-content">
+              <button class="view-detail-btn">Inquire →</button>
+            </div>
+          </div>
+        </div>
+        <div class="painting-info">
+          <h3 class="painting-title">The end of the Ocean</h3>
+          <div class="painting-details-row">
+            <span class="painting-medium"></span>
+            <span class="painting-dimensions">100 × 120 cm</span>
+          </div>
+          <div class="painting-meta-footer">
+            <span class="painting-year">2025</span>
+            <span class="painting-status available">available</span>
+            <span class="piece-price"> 15,000€/17,643.15 USD</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- painting 3 — sold / inquire variant -->
+      <div class="painting-card" data-artist="Kalkidan Mulugeta">
+        <div class="painting-image-wrapper">
+          <img src="./Resources IMU/2.jpg" alt="Feelin' Blue" class="painting-image" loading="lazy">
+          <div class="painting-overlay">
+            <div class="overlay-content">
+              <button class="view-detail-btn">Inquire →</button>
+            </div>
+          </div>
+        </div>
+        <div class="painting-info">
+          <h3 class="painting-title">Feelin' Blue</h3>
+          <div class="painting-details-row">
+            <span class="painting-medium"></span>
+            <span class="painting-dimensions">90 × 110 cm</span>
+          </div>
+          <div class="painting-meta-footer">
+            <span class="painting-year">2025</span>
+            <span class="painting-status reserved">reserved</span>
+            <span class="piece-price">Price 22,000€/25,876.62 USD</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- painting 4 -->
+      <div class="painting-card" data-artist="Kalkidan Mulugeta">
+        <div class="painting-image-wrapper">
+          <img src="./Resources IMU/4.jpg" alt="Minimal ink and wash painting" class="painting-image" loading="lazy">
+          <div class="painting-overlay">
+            <div class="overlay-content">
+              <button class="view-detail-btn">Inquire →</button>
+            </div>
+          </div>
+        </div>
+        <div class="painting-info">
+          <h3 class="painting-title">Not set yet </h3>
+          <div class="painting-details-row">
+            <span class="painting-medium"></span>
+            <span class="painting-dimensions">75 × 105 cm</span>
+          </div>
+          <div class="painting-meta-footer">
+            <span class="painting-year">2025</span>
+            <span class="painting-status available">available</span>
+          </div>
+        </div>
+      </div>
+
+    <!-- subtle footer note -->
+    <div class="paintings-footer-note">
+      <p>For inquiries, pricing, and studio visits — <a href="mailto:inquiries@imuarts.com">inquiries@imuarts.com</a></p>
+    </div>
+  </div>
+</section>
+
+<style>
+/* ---------- ENHANCED PAINTINGS SECTION ---------- */
+.paintings-section {
+  margin: 8vh 0 16vh;
+  position: relative;
+}
+
+.paintings-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 4vw;
+}
+
+/* refined header design */
+.paintings-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2.5rem;
+  margin-bottom: 5rem;
+  position: relative;
+}
+
+.header-accent-line {
+  position: absolute;
+  top: -1rem;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background: #A65A3A;
+  opacity: 0.4;
+}
+
+.header-text-group {
+  flex: 2;
+}
+
+.paintings-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: #A65A3A;
+  display: inline-block;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.paintings-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 6vw, 3.8rem);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: #14100E;
+}
+
+.title-main {
+  font-weight: 450;
+}
+
+.title-subtle {
+  font-weight: 300;
+  opacity: 0.5;
+  font-size: 0.7em;
+  letter-spacing: -0.01em;
+}
+
+.paintings-intro {
+  flex: 1;
+  min-width: 240px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: #3b2e27;
+  border-left: 1px solid rgba(166, 90, 58, 0.2);
+  padding-left: 1.8rem;
+}
+
+.paintings-intro p {
+  margin-bottom: 1rem;
+}
+
+.intro-link {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #A65A3A;
+  text-decoration: none;
+  transition: opacity 0.3s;
+}
+
+.intro-link:hover {
+  opacity: 0.6;
+}
+
+/* gallery grid: refined with subtle asymmetry */
+.paintings-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem 2rem;
+  margin: 3rem 0 3rem;
+}
+
+/* featured card spans differently? subtle distinction */
+.painting-card-featured {
+  grid-column: span 1;
+}
+
+@media (min-width: 1024px) {
+  .paintings-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .painting-card-featured {
+    transform: scale(1.02);
+  }
+}
+
+/* painting card */
+.painting-card {
+  background: transparent;
+  transition: all 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+  cursor: pointer;
+}
+
+.painting-card:hover {
+  transform: translateY(-6px);
+}
+
+/* image wrapper with refined depth */
+.painting-image-wrapper {
+  position: relative;
+  overflow: hidden;
+  background: #ECE4DB;
+  border-radius: 1px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  transition: box-shadow 0.5s ease;
+}
+
+.painting-card:hover .painting-image-wrapper {
+  box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.12);
+}
+
+.painting-image {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  display: block;
+  filter: brightness(0.96) contrast(1.02);
+  transition: transform 1.1s cubic-bezier(0.2, 0.9, 0.4, 1), filter 0.5s ease;
+}
+
+.painting-card:hover .painting-image {
+  transform: scale(1.04);
+  filter: brightness(1.01);
+}
+
+/* overlay: refined, minimal but elevated */
+.painting-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 16, 14, 0.02);
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  opacity: 0;
+  transition: opacity 0.5s ease, background 0.4s;
+  pointer-events: none;
+}
+
+.painting-card:hover .painting-overlay {
+  opacity: 1;
+  background: linear-gradient(to top, rgba(20, 16, 14, 0.3), transparent 60%);
+  pointer-events: auto;
+}
+
+.overlay-content {
+  padding: 0 0 1.5rem 1.5rem;
+  width: 100%;
+}
+
+.view-detail-btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  background: transparent;
+  color: #F5F1EB;
+  border: 1px solid rgba(245, 241, 235, 0.5);
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  transition: all 0.35s ease;
+  transform: translateX(-8px);
+  opacity: 0;
+  backdrop-filter: blur(2px);
+  font-weight: 400;
+}
+
+.painting-card:hover .view-detail-btn {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.view-detail-btn:hover {
+  background: #A65A3A;
+  border-color: #A65A3A;
+  letter-spacing: 0.28em;
+}
+
+/* painting info: crisp typography */
+.painting-info {
+  margin-top: 1.2rem;
+  padding: 0 0.2rem;
+}
+
+.painting-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+  font-weight: 450;
+  letter-spacing: -0.01em;
+  color: #171411;
+  margin-bottom: 0.4rem;
+  line-height: 1.25;
+}
+
+.painting-details-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: #756b62;
+  font-weight: 350;
+  margin-bottom: 0.6rem;
+}
+
+.painting-medium,
+.painting-dimensions {
+  text-transform: uppercase;
+}
+
+.painting-meta-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 0.5px solid rgba(17, 17, 17, 0.08);
+  padding-top: 0.7rem;
+  margin-top: 0.2rem;
+}
+
+.painting-year {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.65rem;
+  color: #9A8D82;
+  letter-spacing: 0.02em;
+}
+
+.painting-status {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  padding: 0.2rem 0.7rem;
+  border-radius: 30px;
+  font-weight: 400;
+}
+
+.painting-status.available {
+  background: rgba(166, 90, 58, 0.1);
+  color: #A65A3A;
+}
+
+.painting-status.reserved {
+  background: rgba(0, 0, 0, 0.04);
+  color: #8E7D6E;
+}
+
+/* footer note */
+.paintings-footer-note {
+  margin-top: 4rem;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: #8E7D6E;
+  border-top: 1px solid rgba(166, 90, 58, 0.1);
+  padding-top: 2rem;
+}
+
+.paintings-footer-note a {
+  color: #A65A3A;
+  text-decoration: none;
+  border-bottom: 1px dotted rgba(166, 90, 58, 0.4);
+  transition: border-color 0.3s;
+}
+
+.paintings-footer-note a:hover {
+  border-bottom-color: #A65A3A;
+}
+
+/* responsive */
+@media (max-width: 900px) {
+  .paintings-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .paintings-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+  .paintings-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .paintings-intro {
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid rgba(166, 90, 58, 0.12);
+    padding-top: 1rem;
+  }
+  .paintings-section {
+    margin: 6vh 0 10vh;
+  }
+}
+
+/* fade-up animation integration */
+.paintings-section {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.9s cubic-bezier(0.2, 0.9, 0.4, 1), transform 0.9s cubic-bezier(0.2, 0.9, 0.4, 1);
+}
+
+.paintings-section.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+</style>
+
+<script>
+(function() {
+  // trigger fade-in observer
+  const paintingsSection = document.getElementById('paintings');
+  if (paintingsSection) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: "0px 0px -40px 0px" });
+    observer.observe(paintingsSection);
+  }
+
+  // inquiry button handler — elegant & minimal
+  const detailBtns = document.querySelectorAll('.view-detail-btn');
+  detailBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const card = btn.closest('.painting-card');
+      const title = card?.querySelector('.painting-title')?.innerText || 'artwork';
+      // you can replace with modal or mailto
+      window.location.href = `mailto:inquiries@imuarts.com?subject=Inquiry: ${title}`;
+    });
+  });
+
+  // hover effect for global custom cursor if exists
+  const paintingCards = document.querySelectorAll('.painting-card');
+  paintingCards.forEach(card => {
+    card.addEventListener('mouseenter', () => {
+      const cursor = document.getElementById('customCursor');
+      if (cursor) cursor.classList.add('hover-art');
+    });
+    card.addEventListener('mouseleave', () => {
+      const cursor = document.getElementById('customCursor');
+      if (cursor) cursor.classList.remove('hover-art');
+    });
+  });
+})();
+</script>
+  <!-- FOOTER -->
+  <footer class="footer" id="contact">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <div class="footer-heading sans-caption">IMU Arts</div>
+          <p style="font-weight:300; font-size:0.9rem; opacity:0.7; line-height:1.6;">
+            Under Development<br>Check our social media for updates until further notice.
+          </p>
+        </div>
+        <div class="footer-col">
+          <div class="footer-heading sans-caption">Navigate</div>
+          <a href="#featured" class="footer-link">Works</a>
+          <a href="#artist" class="footer-link">Artists</a>
+          <a href="#journal" class="footer-link">Journal</a>
+          <a href="#exhibitions" class="footer-link">Exhibitions</a>
+        </div>
+        <div class="footer-col">
+          <div class="footer-heading sans-caption">Contact</div>
+          <a href="#" class="footer-link">inquiries@imuarts.com</a>
+          <a href="#" class="footer-link">+31 6 14 977 79 0</a>
+          <a href="#" class="footer-link">Rotterdam · Kingdom of the Netherlands</a>
+        </div>
+        <div class="footer-col">
+          <div class="footer-heading sans-caption">Newsletter</div>
+          <input type="email" placeholder="Your email" class="newsletter-input">
+          <button class="newsletter-btn">Subscribe →</button>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        © 2026 IMU Arts · 
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function() {
+      // ---------- LOGO ANIMATION SEQUENCE ----------
+      const animatedLogo = document.getElementById('animatedLogo');
+      const loader = document.getElementById('loader');
+      const loaderRing = document.getElementById('loaderRing');
+      const loaderText = document.getElementById('loaderText');
+      const heroContent = document.getElementById('heroContent');
+      const scrollHint = document.getElementById('scrollHint');
+      
+      // Timing sequence:
+      // 0ms: Page loads, logo visible at center with ring pulsing
+      // 2000ms: Logo begins moving to nav position
+      // 3200ms: Logo arrives at nav, loader fades, hero reveals
+      
+      window.addEventListener('load', () => {
+        // Phase 1: Logo sits centered for 2 seconds
+        setTimeout(() => {
+          // Phase 2: Logo animates to nav position
+          animatedLogo.classList.add('in-nav');
+          loaderRing.classList.add('fade-out');
+          loaderText.classList.add('fade-out');
+          
+          // Phase 3: Loader background fades, hero reveals
+          setTimeout(() => {
+            loader.classList.add('fade-out');
+            heroContent.classList.add('revealed');
+            scrollHint.classList.add('visible');
+          }, 1200); // Matches the logo transition duration
+          
+        }, 2000);
+      });
+
+      // Update logo position when nav scrolls
+      const nav = document.getElementById('mainNav');
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 60) {
+          nav.classList.add('scrolled');
+          if (animatedLogo.classList.contains('in-nav')) {
+            animatedLogo.classList.add('scrolled-logo');
+          }
+        } else {
+          nav.classList.remove('scrolled');
+          animatedLogo.classList.remove('scrolled-logo');
+        }
+      }, { passive: true });
+
+      // ---------- CUSTOM CURSOR ----------
+      const cursor = document.getElementById('customCursor');
+      let mouseX = 0, mouseY = 0;
+      let cursorX = 0, cursorY = 0;
+
+      document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        cursor.classList.add('visible');
+      });
+
+      document.addEventListener('mouseleave', () => cursor.classList.remove('visible'));
+      document.addEventListener('mouseenter', () => cursor.classList.add('visible'));
+
+      function animateCursor() {
+        cursorX += (mouseX - cursorX) * 0.15;
+        cursorY += (mouseY - cursorY) * 0.15;
+        cursor.style.left = cursorX + 'px';
+        cursor.style.top = cursorY + 'px';
+        requestAnimationFrame(animateCursor);
+      }
+      animateCursor();
+
+      const hoverTargets = document.querySelectorAll('.artwork-item, .art-piece, .artist-portrait');
+      hoverTargets.forEach(el => {
+        el.addEventListener('mouseenter', () => cursor.classList.add('hover-art'));
+        el.addEventListener('mouseleave', () => cursor.classList.remove('hover-art'));
+      });
+
+      window.addEventListener('touchstart', () => {
+        cursor.style.display = 'none';
+      });
+
+      // ---------- MOBILE MENU ----------
+      const menuToggle = document.getElementById('menuToggle');
+      const navLinks = document.getElementById('navLinks');
+      
+      menuToggle.addEventListener('click', () => {
+        navLinks.classList.toggle('mobile-hidden');
+        const spans = menuToggle.querySelectorAll('span');
+        if (!navLinks.classList.contains('mobile-hidden')) {
+          spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
+          spans[1].style.opacity = '0';
+          spans[2].style.transform = 'rotate(-45deg) translate(5px, -5px)';
+        } else {
+          spans[0].style.transform = 'none';
+          spans[1].style.opacity = '1';
+          spans[2].style.transform = 'none';
+        }
+      });
+
+      navLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          if (window.innerWidth <= 768) {
+            navLinks.classList.add('mobile-hidden');
+            const spans = menuToggle.querySelectorAll('span');
+            spans[0].style.transform = 'none';
+            spans[1].style.opacity = '1';
+            spans[2].style.transform = 'none';
+          }
+        });
+      });
+
+      // ---------- SCROLL ANIMATIONS ----------
+      const fadeElements = document.querySelectorAll('.fade-up');
+      
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      }, {
+        threshold: 0.15,
+        rootMargin: "0px 0px -50px 0px"
+      });
+
+      fadeElements.forEach(el => observer.observe(el));
+
+      window.addEventListener('load', () => {
+        fadeElements.forEach(el => {
+          const rect = el.getBoundingClientRect();
+          if (rect.top < window.innerHeight - 60) {
+            el.classList.add('visible');
+          }
+        });
+      });
+
+      // ---------- SMOOTH SCROLL ----------
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+          const href = this.getAttribute('href');
+          if (href === "#" || href === "#home") {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+          }
+          const target = document.querySelector(href);
+          if (target) {
+            e.preventDefault();
+            const navHeight = nav.classList.contains('scrolled') ? 70 : 100;
+            const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - navHeight;
+            window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+          }
+        });
+      });
+
+      // ---------- PARALLAX ----------
+      window.addEventListener('scroll', () => {
+        const scrolled = window.pageYOffset;
+        const lineArt = document.querySelector('.hero-line-art');
+        const lineArt2 = document.querySelector('.hero-line-art-2');
+        if (lineArt && scrolled < window.innerHeight) {
+          lineArt.style.transform = `translate(${scrolled * 0.02}px, ${scrolled * 0.015}px)`;
+        }
+        if (lineArt2 && scrolled < window.innerHeight) {
+          lineArt2.style.transform = `translate(-${scrolled * 0.015}px, -${scrolled * 0.01}px)`;
+        }
+      });
+
+      // ---------- RESIZE ----------
+      window.addEventListener('resize', () => {
+        if (window.innerWidth > 768) {
+          navLinks.classList.remove('mobile-hidden');
+          const spans = menuToggle.querySelectorAll('span');
+          spans[0].style.transform = 'none';
+          spans[1].style.opacity = '1';
+          spans[2].style.transform = 'none';
+        }
+      });
+
+    })();
+  </script>
+</body>
+</html>
